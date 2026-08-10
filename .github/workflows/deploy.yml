@@ -33,7 +33,7 @@ jobs:
         run: flutter pub get
 
       - name: Build Flutter Web
-        run: flutter build web --release
+        run: flutter build web --release --base-href "/picture-palace-productions-client-web/"
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
