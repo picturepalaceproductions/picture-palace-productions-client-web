@@ -30,294 +30,190 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  Future<void> _openAlbum() async {
-    FocusScope.of(context).unfocus();
-
-    final enteredCode = albumCodeController.text.trim();
-
-    if (enteredCode.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter your Wedding Album Code")),
-      );
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    final code = enteredCode.toUpperCase();
-
-    debugPrint("Album Code = '$code'");
-
-    final album = await _albumService.openAlbum(code);
-
-    if (!mounted) return;
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (album == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Album Not Found")));
-      return;
-    }
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => DayScreen(album: album)),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       resizeToAvoidBottomInset: true,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              "assets/images/background.jpg",
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+            ),
+          ),
+          Positioned.fill(
+            child: Container(color: Colors.black.withOpacity(.82)),
+          ),
+          SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final availableWidth = constraints.maxWidth;
+                final horizontalPadding = availableWidth < 390 ? 14.0 : 22.0;
+                final contentWidth = (availableWidth - horizontalPadding * 2)
+                    .clamp(0.0, 430.0);
 
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          final height = constraints.maxHeight;
-
-          // Mobile / tablet / desktop detection
-          final bool isMobile = width < 600;
-          final bool isSmallMobile = height < 750;
-
-          // Main content width
-          final double contentWidth = isMobile
-              ? width.clamp(300.0, 430.0)
-              : 430.0;
-
-          // Responsive spacing
-          final double topSpace = isMobile ? (isSmallMobile ? 8 : 14) : 28;
-
-          final double logoScale = isMobile
-              ? (isSmallMobile ? 0.72 : 0.82)
-              : 0.90;
-
-          final double betweenLogoAndCard = isMobile
-              ? (isSmallMobile ? 8 : 14)
-              : 20;
-
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              // =========================================================
-              // BACKGROUND IMAGE
-              // =========================================================
-              Image.asset(
-                "assets/images/background.jpg",
-                fit: BoxFit.cover,
-                alignment: Alignment.center,
-              ),
-
-              // Dark cinematic overlay
-              Container(color: Colors.black.withValues(alpha: 0.72)),
-
-              // =========================================================
-              // MAIN CONTENT
-              // =========================================================
-              SafeArea(
-                child: Center(
-                  child: SizedBox(
-                    width: contentWidth,
-
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isMobile ? 14 : 20,
-                      ),
-
+                return SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: horizontalPadding,
+                    vertical: 25,
+                  ),
+                  child: Center(
+                    child: SizedBox(
+                      width: contentWidth,
                       child: Column(
                         children: [
-                          SizedBox(height: topSpace),
-
-                          // =================================================
-                          // LOGO
-                          // =================================================
-                          Expanded(
-                            flex: 5,
-                            child: Center(
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Transform.scale(
-                                  scale: logoScale,
-                                  child: const LogoWidget(),
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          SizedBox(height: betweenLogoAndCard),
-
-                          // =================================================
-                          // ALBUM LOGIN CARD
-                          // =================================================
+                          const SizedBox(height: 10),
+                          const LogoWidget(),
+                          const SizedBox(height: 35),
                           Container(
                             width: double.infinity,
-
-                            padding: EdgeInsets.symmetric(
-                              horizontal: isMobile ? 14 : 20,
-                              vertical: isMobile ? 14 : 18,
-                            ),
-
+                            padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(
-                              color: const Color(
-                                0xFF151515,
-                              ).withValues(alpha: 0.94),
-
-                              borderRadius: BorderRadius.circular(
-                                isMobile ? 18 : 22,
-                              ),
-
+                              color: const Color(0xFF171717).withOpacity(.92),
+                              borderRadius: BorderRadius.circular(24),
                               border: Border.all(
                                 color: AppColors.primaryGold,
-                                width: 0.8,
+                                width: .8,
                               ),
-
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.primaryGold.withValues(
-                                    alpha: 0.12,
-                                  ),
-                                  blurRadius: 30,
-                                  spreadRadius: 2,
+                                  color: AppColors.primaryGold.withOpacity(.12),
+                                  blurRadius: 40,
+                                  spreadRadius: 3,
                                 ),
                               ],
                             ),
-
                             child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  "ENTER YOUR WEDDING ALBUM CODE",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: AppColors.primaryGold,
-                                    fontSize: isMobile ? 12 : 14,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: isMobile ? 1.3 : 1.8,
+                                const Center(
+                                  child: Text(
+                                    "ENTER YOUR WEDDING ALBUM CODE",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: AppColors.primaryGold,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 2,
+                                    ),
                                   ),
                                 ),
-
-                                SizedBox(height: isMobile ? 12 : 16),
-
+                                const SizedBox(height: 22),
                                 CustomTextField(
                                   controller: albumCodeController,
                                   hintText: "PP2026-001",
                                   icon: Icons.photo_library_rounded,
                                 ),
-
-                                SizedBox(height: isMobile ? 12 : 16),
-
+                                const SizedBox(height: 28),
                                 PrimaryButton(
-                                  title: _isLoading
-                                      ? "OPENING ALBUM..."
-                                      : "OPEN ALBUM",
-
-                                  onPressed: () {
-                                    if (!_isLoading) {
-                                      _openAlbum();
+                                  title: "OPEN ALBUM",
+                                  onPressed: () async {
+                                    FocusScope.of(context).unfocus();
+                                    if (albumCodeController.text.trim().isEmpty) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            "Please enter your Wedding Album Code",
+                                          ),
+                                        ),
+                                      );
+                                      return;
                                     }
+                                    setState(() {
+                                      _isLoading = true;
+                                    });
+                                    final album = await _albumService.openAlbum(
+                                      albumCodeController.text.trim(),
+                                    );
+                                    if (!mounted) return;
+                                    setState(() {
+                                      _isLoading = false;
+                                    });
+                                    if (album == null) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text("Album Not Found"),
+                                        ),
+                                      );
+                                      return;
+                                    }
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => DayScreen(album: album),
+                                      ),
+                                    );
                                   },
                                 ),
-                              ],
-                            ),
-                          ),
-
-                          SizedBox(height: isMobile ? 10 : 14),
-
-                          // =================================================
-                          // WELCOME CARD
-                          // =================================================
-                          Container(
-                            width: double.infinity,
-
-                            padding: EdgeInsets.symmetric(
-                              horizontal: isMobile ? 14 : 18,
-                              vertical: isMobile ? 10 : 14,
-                            ),
-
-                            decoration: BoxDecoration(
-                              color: const Color(
-                                0xFF101010,
-                              ).withValues(alpha: 0.94),
-
-                              borderRadius: BorderRadius.circular(
-                                isMobile ? 16 : 18,
-                              ),
-
-                              border: Border.all(
-                                color: AppColors.primaryGold.withValues(
-                                  alpha: 0.18,
-                                ),
-                              ),
-                            ),
-
-                            child: Column(
-                              children: [
-                                Icon(
-                                  Icons.favorite,
-                                  color: AppColors.primaryGold,
-                                  size: isMobile ? 23 : 28,
-                                ),
-
-                                SizedBox(height: isMobile ? 5 : 8),
-
-                                Text(
-                                  "Welcome to Your Wedding Gallery",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: isMobile ? 14 : 17,
-                                    fontWeight: FontWeight.bold,
+                                const SizedBox(height: 28),
+                                if (_isLoading)
+                                  const Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.only(bottom: 20),
+                                      child: CircularProgressIndicator(
+                                        color: AppColors.primaryGold,
+                                      ),
+                                    ),
                                   ),
-                                ),
-
-                                SizedBox(height: isMobile ? 5 : 8),
-
-                                Text(
-                                  "Enter your Wedding Album Code to access your "
-                                  "wedding gallery and select your favourite "
-                                  "memories beautifully captured by Picture Palace Productions.",
-                                  textAlign: TextAlign.center,
-                                  maxLines: isMobile ? 3 : 4,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: isMobile ? 10.5 : 13,
-                                    height: 1.35,
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF101010),
+                                    borderRadius: BorderRadius.circular(18),
+                                    border: Border.all(
+                                      color: AppColors.primaryGold.withOpacity(.20),
+                                    ),
+                                  ),
+                                  child: const Column(
+                                    children: [
+                                      Icon(
+                                        Icons.favorite,
+                                        color: AppColors.primaryGold,
+                                        size: 34,
+                                      ),
+                                      SizedBox(height: 14),
+                                      Text(
+                                        "Welcome to Your Wedding Gallery",
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      SizedBox(height: 12),
+                                      Text(
+                                        "Enter your Wedding Album Code to access your wedding gallery and select your favourite memories beautifully captured by Picture Palace Productions.",
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 14,
+                                          height: 1.6,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
                           ),
-
-                          // =================================================
-                          // FOOTER
-                          // =================================================
-                          Expanded(
-                            flex: 4,
-                            child: Center(
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: const FooterWidget(),
-                              ),
-                            ),
-                          ),
-
-                          SizedBox(height: isMobile ? 4 : 10),
+                          const SizedBox(height: 35),
+                          const FooterWidget(),
+                          const SizedBox(height: 20),
                         ],
                       ),
                     ),
                   ),
-                ),
-              ),
-            ],
-          );
-        },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
-  }
-}
+  }}
