@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/theme/app_colors.dart';
 import '../services/album_service.dart';
+import '../services/web_install_service.dart';
 
 import '../widgets/custom_textfield.dart';
 import '../widgets/footer_widget.dart';
@@ -28,6 +29,187 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     albumCodeController.dispose();
     super.dispose();
+  }
+
+  // ==========================================
+  // INSTALL ALBUM SELECTION APP
+  // ==========================================
+
+  Future<void> _installAlbumSelectionApp() async {
+    if (!WebInstallService.isWeb) {
+      _showInstallInstructions();
+      return;
+    }
+
+    final installed = await WebInstallService.isStandalone();
+    if (installed) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Album Selection App is already installed."),
+        ),
+      );
+      return;
+    }
+
+    final launched = await WebInstallService.tryInstall();
+    if (launched) return;
+
+    _showInstallInstructions();
+  }
+
+  void _showInstallInstructions() {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF181818),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
+          ),
+          title: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryGold,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.download_for_offline_outlined,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  "Install Album Selection App",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Add this Album Selection app to your Home Screen for quick and easy access.",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF101010),
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(
+                      color: AppColors.primaryGold.withOpacity(.25),
+                    ),
+                  ),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "iPhone / iPad",
+                        style: TextStyle(
+                          color: AppColors.primaryGold,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        "1. Open this page in Safari.\n"
+                        "2. Tap the Share button.\n"
+                        "3. Select “Add to Home Screen”.\n"
+                        "4. Tap “Add”.",
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                          height: 1.6,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF101010),
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(
+                      color: AppColors.primaryGold.withOpacity(.25),
+                    ),
+                  ),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Android",
+                        style: TextStyle(
+                          color: AppColors.primaryGold,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        "If your browser shows an install option, tap "
+                        "“Install app”. Otherwise use the browser menu and "
+                        "choose “Add to Home screen”.",
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                          height: 1.6,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          actions: [
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryGold,
+                  foregroundColor: Colors.black,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: const Text(
+                  "GOT IT",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: .8,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -113,8 +295,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                   title: "OPEN ALBUM",
                                   onPressed: () async {
                                     FocusScope.of(context).unfocus();
-                                    if (albumCodeController.text.trim().isEmpty) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                    if (albumCodeController.text
+                                        .trim()
+                                        .isEmpty) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         const SnackBar(
                                           content: Text(
                                             "Please enter your Wedding Album Code",
@@ -134,7 +320,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                       _isLoading = false;
                                     });
                                     if (album == null) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         const SnackBar(
                                           content: Text("Album Not Found"),
                                         ),
@@ -148,6 +336,35 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                     );
                                   },
+                                ),
+                                const SizedBox(height: 12),
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 48,
+                                  child: OutlinedButton.icon(
+                                    onPressed: _installAlbumSelectionApp,
+                                    icon: const Icon(
+                                      Icons.download_for_offline_outlined,
+                                      size: 20,
+                                    ),
+                                    label: const Text(
+                                      "INSTALL ALBUM SELECTION APP",
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: .5,
+                                      ),
+                                    ),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: AppColors.primaryGold,
+                                      side: BorderSide(
+                                        color: AppColors.primaryGold.withOpacity(.55),
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                    ),
+                                  ),
                                 ),
                                 const SizedBox(height: 28),
                                 if (_isLoading)
@@ -166,7 +383,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                     color: const Color(0xFF101010),
                                     borderRadius: BorderRadius.circular(18),
                                     border: Border.all(
-                                      color: AppColors.primaryGold.withOpacity(.20),
+                                      color: AppColors.primaryGold.withOpacity(
+                                        .20,
+                                      ),
                                     ),
                                   ),
                                   child: const Column(
@@ -216,4 +435,5 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
-  }}
+  }
+}
